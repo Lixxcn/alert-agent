@@ -1,0 +1,6 @@
+# OpenAI Provider
+OPENAI_API_KEY = ""
+OPENAI_BASE_URL = "https://api.deepseek.com"
+
+SF_API_KEY = ""
+SF_BASE_URL = "https://api.siliconflow.cn/v1/"
