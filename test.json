@@ -1,0 +1,82 @@
+curl -X POST -H "Content-Type: application/json" -d 'Received alert: {
+    "receiver": "ai-agent-webhook-receiver",
+    "status": "firing",
+    "alerts": [
+        {
+            "status": "firing",
+            "labels": {
+                "alertname": "KubeDeploymentReplicasMismatch",
+                "container": "kube-state-metrics",
+                "deployment": "nginx-deployment",
+                "endpoint": "http",
+                "instance": "10.244.0.183:8080",
+                "job": "kube-state-metrics",
+                "namespace": "default",
+                "pod": "prometheus-kube-state-metrics-7457555cf7-bx8nt",
+                "prometheus": "monitoring/prometheus-kube-prometheus-prometheus",
+                "service": "prometheus-kube-state-metrics",
+                "severity": "warning"
+            },
+            "annotations": {
+                "description": "Deployment default/nginx-deployment has not matched the expected number of replicas for longer than 15 minutes on cluster .",
+                "runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/kubernetes/kubedeploymentreplicasmismatch",
+                "summary": "Deployment has not matched the expected number of replicas."
+            },
+            "startsAt": "2025-05-26T09:45:24.094Z",
+            "endsAt": "0001-01-01T00:00:00Z",
+            "generatorURL": "http://prometheus-kube-prometheus-prometheus.monitoring:9090/graph?g0.expr=%28kube_deployment_spec_replicas%7Bjob%3D%22kube-state-metrics%22%2Cnamespace%3D~%22.%2A%22%7D+%3E+kube_deployment_status_replicas_available%7Bjob%3D%22kube-state-metrics%22%2Cnamespace%3D~%22.%2A%22%7D%29+and+%28changes%28kube_deployment_status_replicas_updated%7Bjob%3D%22kube-state-metrics%22%2Cnamespace%3D~%22.%2A%22%7D%5B10m%5D%29+%3D%3D+0%29&g0.tab=1",
+            "fingerprint": "a830b09e54d3b1b5"
+        },
+        {
+            "status": "firing",
+            "labels": {
+                "alertname": "KubePodNotReady",
+                "namespace": "default",
+                "pod": "nginx-deployment-85754b9c87-8hpms",
+                "prometheus": "monitoring/prometheus-kube-prometheus-prometheus",
+                "severity": "warning"
+            },
+            "annotations": {
+                "description": "Pod default/nginx-deployment-85754b9c87-8hpms has been in a non-ready state for longer than 15 minutes on cluster .",
+                "runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/kubernetes/kubepodnotready",
+                "summary": "Pod has been in a non-ready state for more than 15 minutes."
+            },
+            "startsAt": "2025-05-26T09:45:24.094Z",
+            "endsAt": "0001-01-01T00:00:00Z",
+            "generatorURL": "http://prometheus-kube-prometheus-prometheus.monitoring:9090/graph?g0.expr=sum+by+%28namespace%2C+pod%2C+cluster%29+%28max+by+%28namespace%2C+pod%2C+cluster%29+%28kube_pod_status_phase%7Bjob%3D%22kube-state-metrics%22%2Cnamespace%3D~%22.%2A%22%2Cphase%3D~%22Pending%7CUnknown%7CFailed%22%7D%29+%2A+on+%28namespace%2C+pod%2C+cluster%29+group_left+%28owner_kind%29+topk+by+%28namespace%2C+pod%2C+cluster%29+%281%2C+max+by+%28namespace%2C+pod%2C+owner_kind%2C+cluster%29+%28kube_pod_owner%7Bowner_kind%21%3D%22Job%22%7D%29%29%29+%3E+0&g0.tab=1",
+            "fingerprint": "6bde3743b85974a3"
+        },
+        {
+            "status": "firing",
+            "labels": {
+                "alertname": "KubePodNotReady",
+                "namespace": "default",
+                "pod": "nginx-deployment-85754b9c87-q4p7k",
+                "prometheus": "monitoring/prometheus-kube-prometheus-prometheus",
+                "severity": "warning"
+            },
+            "annotations": {
+                "description": "Pod default/nginx-deployment-85754b9c87-q4p7k has been in a non-ready state for longer than 15 minutes on cluster .",
+                "runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/kubernetes/kubepodnotready",
+                "summary": "Pod has been in a non-ready state for more than 15 minutes."
+            },
+            "startsAt": "2025-05-26T09:45:24.094Z",
+            "endsAt": "0001-01-01T00:00:00Z",
+            "generatorURL": "http://prometheus-kube-prometheus-prometheus.monitoring:9090/graph?g0.expr=sum+by+%28namespace%2C+pod%2C+cluster%29+%28max+by+%28namespace%2C+pod%2C+cluster%29+%28kube_pod_status_phase%7Bjob%3D%22kube-state-metrics%22%2Cnamespace%3D~%22.%2A%22%2Cphase%3D~%22Pending%7CUnknown%7CFailed%22%7D%29+%2A+on+%28namespace%2C+pod%2C+cluster%29+group_left+%28owner_kind%29+topk+by+%28namespace%2C+pod%2C+cluster%29+%281%2C+max+by+%28namespace%2C+pod%2C+owner_kind%2C+cluster%29+%28kube_pod_owner%7Bowner_kind%21%3D%22Job%22%7D%29%29%29+%3E+0&g0.tab=1",
+            "fingerprint": "3b6b1d3c98bbe92a"
+        }
+    ],
+    "groupLabels": {
+        "namespace": "default"
+    },
+    "commonLabels": {
+        "namespace": "default",
+        "prometheus": "monitoring/prometheus-kube-prometheus-prometheus",
+        "severity": "warning"
+    },
+    "commonAnnotations": {},
+    "externalURL": "http://prometheus-kube-prometheus-alertmanager.monitoring:9093",
+    "version": "4",
+    "groupKey": "{}:{namespace=\"default\"}",
+    "truncatedAlerts": 0
+}' http: //127.0.0.1:10000/alert
