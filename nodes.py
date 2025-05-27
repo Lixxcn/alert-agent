@@ -102,29 +102,30 @@ class AnalyzeRootCauseNode(Node):
 请以 YAML 格式输出你的决策。
 输出必须包含 'decision' 字段，其值可以是 'execute_tool' 或 'resolved' 或 'needs_manual_intervention'。
 
-如果 'decision' 是 'execute_tool'，则必须包含 'tool_call' 字段，其值是一个字典，包含 'tool_name' 和 'parameters' 字段。
+如果 'decision' 是 'execute_tool'，则必须包含 'reason' 字段，说明原因。必须包含 'tool_call' 字段，其值是一个字典，包含 'tool_name' 和 'parameters' 字段。
 如果 'decision' 是 'resolved' 或 'needs_manual_intervention'，则必须包含 'reason' 字段，说明原因。
 
 示例输出格式：
 ```yaml
-decision: execute_tool
+reason: Pod CPU usage is high, need to check logs.
 tool_call:
   tool_name: get_pod_logs
   parameters:
     pod_name: my-app-pod-xyz
     namespace: default
+decision: execute_tool
 ```
 
 或者：
 ```yaml
-decision: resolved
 reason: Pod CPU usage has returned to normal after scaling down.
+decision: resolved
 ```
 
 或者：
 ```yaml
-decision: needs_manual_intervention
 reason: Multiple attempts to restart deployment failed, requiring human diagnosis.
+decision: needs_manual_intervention
 ```
 """
         messages = [{"role": "user", "content": prompt}]
