@@ -1,4 +1,5 @@
 from pocketflow import Node, AsyncNode
+from utils import mcp_client
 from utils.call_llm import call_llm
 from utils.k8s_tools import execute_k8s_command
 import json
@@ -50,40 +51,10 @@ class AnalyzeRootCauseNode(Node):
 
     def exec(self, inputs):
         alert_info, history = inputs
-        alert_name = alert_info.get("commonLabels", {}).get("alertname", "未知告警")
-        severity = alert_info.get("commonLabels", {}).get("severity", "未知")
-        instance = alert_info.get("commonLabels", {}).get("instance", "未知实例")
 
         # 模拟可用的 K8s 工具列表
-        available_k8s_tools = [
-            {
-                "name": "get_pod_logs",
-                "description": "获取指定 Pod 的日志",
-                "parameters": {"pod_name": "str", "namespace": "str"},
-            },
-            {
-                "name": "describe_pod",
-                "description": "获取指定 Pod 的详细描述信息",
-                "parameters": {"pod_name": "str", "namespace": "str"},
-            },
-            {
-                "name": "restart_deployment",
-                "description": "重启指定 Deployment",
-                "parameters": {"deployment_name": "str", "namespace": "str"},
-            },
-            {
-                "name": "scale_deployment",
-                "description": "扩缩容指定 Deployment 的副本数",
-                "parameters": {
-                    "deployment_name": "str",
-                    "replicas": "int",
-                    "namespace": "str",
-                },
-            },
-            # 更多 K8s 工具...
-        ]
+        available_k8s_tools = mcp_client.ToolSession.list_tools()
 
-        tools_str = json.dumps(available_k8s_tools, indent=2, ensure_ascii=False)
         history_str = json.dumps(history, indent=2, ensure_ascii=False)
 
         prompt = f"""
@@ -97,34 +68,34 @@ class AnalyzeRootCauseNode(Node):
 {history_str if history else "无历史执行记录。"}
 
 可用的 K8s 工具：
-{tools_str}
+{available_k8s_tools}
 
 请以 YAML 格式输出你的决策。
-输出必须包含 'decision' 字段，其值可以是 'execute_tool' 或 'resolved' 或 'needs_manual_intervention'。
+输出必须包含 'decision' 字段，其值可以是 'execute_tool' 或 'resolved' 或 'needs_manual_intervention'，必须包含 'reason' 字段，说明原因。
 
-如果 'decision' 是 'execute_tool'，则必须包含 'reason' 字段，说明原因。必须包含 'tool_call' 字段，其值是一个字典，包含 'tool_name' 和 'parameters' 字段。
-如果 'decision' 是 'resolved' 或 'needs_manual_intervention'，则必须包含 'reason' 字段，说明原因。
+如果 'decision' 是 'execute_tool'，必须包含 'tool_call' 字段，其值是一个字典，包含 'tool_name' 和 'parameters' 字段。
+如果 'decision' 是 'resolved' 或 'needs_manual_intervention'，只需包含 'reason' 字段，说明原因。
 
 示例输出格式：
 ```yaml
-reason: Pod CPU usage is high, need to check logs.
+reason: 说明原因
 tool_call:
-  tool_name: get_pod_logs
+  tool_name: 工具名称
   parameters:
-    pod_name: my-app-pod-xyz
-    namespace: default
+    parameter1_name: value1
+    parameter2_name: value2
 decision: execute_tool
 ```
 
 或者：
 ```yaml
-reason: Pod CPU usage has returned to normal after scaling down.
+reason: 说明原因
 decision: resolved
 ```
 
 或者：
 ```yaml
-reason: Multiple attempts to restart deployment failed, requiring human diagnosis.
+reason: 说明原因
 decision: needs_manual_intervention
 ```
 """
@@ -225,18 +196,16 @@ class ExecuteSolutionNode(Node):
             f"ExecuteSolutionNode: Executing tool {tool_name} with parameters {parameters}"
         )
         try:
-            result = execute_k8s_command(tool_name, parameters)
+            result = mcp_client.ToolSession.tool_execution(tool_name, parameters)
             return {
                 "tool_call": tool_call,
-                "status": result.get("status", "unknown"),
-                "output": result.get(
-                    "output", result.get("message", "No output/message.")
-                ),
+                "isError": result.get("isError", "False"),
+                "output": result,
             }
         except Exception as e:
             return {
                 "tool_call": tool_call,
-                "status": "error",
+                "isError": "True",
                 "output": f"Exception during tool execution: {e}",
             }
 
@@ -247,7 +216,7 @@ class ExecuteSolutionNode(Node):
         shared["execution_history"].append(exec_res)
 
         print(
-            f"ExecuteSolutionNode: Tool {exec_res['tool_call']['tool_name']} execution status: {exec_res['status']}"
+            f"ExecuteSolutionNode: Tool {exec_res['tool_call']['tool_name']} execution is Error: {exec_res['isError']}"
         )
 
         # 无论成功或失败，都返回到 AnalyzeRootCauseNode 进行下一次决策

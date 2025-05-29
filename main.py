@@ -1,11 +1,9 @@
 import asyncio
-import json
 import queue  # 导入标准库的 queue 模块
-import threading  # 导入 threading 模块
 
 from flow import create_alert_handling_flow
 from utils.http_server import start_webhook_server
-from nodes import ReceiveAlertNode  # 导入 ReceiveAlertNode
+from utils.mcp_client import Server, ToolSession, Configuration
 
 # 用于在 HTTP 服务器线程和主 asyncio 线程之间传递数据的队列
 # 使用标准库的 queue.Queue，它是线程安全的
@@ -33,7 +31,7 @@ async def process_alert_from_queue():
                 f"\nMain: Processing alert from queue: {alert_data.get('commonLabels', {}).get('alertname', 'N/A')}"
             )
 
-            shared = {"raw_alert_request": alert_data}
+            shared = {}
             alert_flow = create_alert_handling_flow()
 
             # 告警数据直接来自队列，无需手动触发 ReceiveAlertNode

@@ -1,4 +1,4 @@
-{
+curl -X POST -H "Content-Type: application/json" -d '{
     "receiver": "ai-agent-webhook-receiver",
     "status": "firing",
     "alerts": [
@@ -79,4 +79,14 @@
     "version": "4",
     "groupKey": "{}:{namespace=\"default\"}",
     "truncatedAlerts": 0
-}
+}' http: //127.0.0.1:10000/alert
+
+
+
+HTTP Callback: Received alert for N/A. Adding to queue.
+127.0.0.1 - - [27/May/2025 17:39:23] "POST /alert HTTP/1.1" 200 -
+
+Main: Processing alert from queue: N/A
+ReceiveAlertNode: Preparing to parse raw alert request.
+ReceiveAlertNode: Parsed alert. Status: firing, Alerts count: 3
+ReceiveAlertNode: Stored parsed alert info and initialized histories. Alert name: N/A
