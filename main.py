@@ -41,9 +41,10 @@ async def process_alert_from_queue():
             shared["alert_info"] = alert_data
 
             # 运行整个流程
-            # PocketFlow 的 run 方法是同步的，如果 Node 内部有异步操作，需要适配
-            # 目前的 Node 实现是同步的，所以可以直接运行
-            alert_flow.run(shared)
+            print("Main: 开始执行告警处理流程...")
+            print("Main: 流程将依次执行: ReceiveAlertNode -> AnalyzeRootCauseNode -> [ExecuteSolutionNode | GenerateReportNode]")
+            await alert_flow.run_async(shared)
+            print("Main: 告警处理流程执行完成")
 
             print(
                 f"Main: Alert processing finished for {alert_data.get('commonLabels', {}).get('alertname', 'N/A')}"

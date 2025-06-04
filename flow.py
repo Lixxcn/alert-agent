@@ -1,4 +1,33 @@
-from pocketflow import Flow
+from pocketflow import AsyncFlow, Flow, AsyncNode
+
+
+class LoggingAsyncFlow(AsyncFlow):
+    """自定义的AsyncFlow子类，添加更多的日志记录"""
+    
+    async def _orch_async(self, shared, params=None):
+        curr, p, last_action = self.start_node, (params or {**self.params}), None
+        print(f"🚀 流程启动: 开始执行告警处理流程，起始节点: {curr.__class__.__name__}")
+        
+        while curr:
+            curr.set_params(p)
+            print(f"▶️ 当前执行: 正在处理节点 {curr.__class__.__name__}")
+            
+            if isinstance(curr, AsyncNode):
+                last_action = await curr._run_async(shared)
+            else:
+                last_action = curr._run(shared)
+                
+            print(f"✅ 执行完成: 节点 {curr.__class__.__name__} 处理完毕，返回结果: {last_action}")
+            
+            curr = self.get_next_node(curr, last_action)
+            if curr:
+                print(f"⏭️ 下一步骤: 即将执行节点 {curr.__class__.__name__}")
+            else:
+                print("🏁 流程结束: 告警处理流程已全部完成！")
+        
+        return last_action
+
+
 from nodes import (
     ReceiveAlertNode,
     AnalyzeRootCauseNode,
@@ -35,7 +64,7 @@ def create_alert_handling_flow():
     # 4. 报告生成后流程结束
     generate_report >> None
 
-    return Flow(start=receive_alert)
+    return LoggingAsyncFlow(start=receive_alert)
 
 
 if __name__ == "__main__":
@@ -88,7 +117,8 @@ if __name__ == "__main__":
     shared_data = {"alert_info": mock_alert}  # 直接将告警数据放入 shared["alert_info"]
 
     # 运行整个流程
-    alert_flow.run(shared_data)
+    import asyncio
+    asyncio.run(alert_flow.run_async(shared_data))
 
     print("\n--- Flow execution finished ---")
     print("Final shared data keys:", shared_data.keys())

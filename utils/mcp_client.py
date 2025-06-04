@@ -195,7 +195,24 @@ Arguments:
 """
 
 
-class ToolSession:
+from abc import ABC, abstractmethod
+
+
+class AbstractToolClient(ABC):
+    """Abstract base class for tool clients."""
+
+    @abstractmethod
+    async def get_tools_description(self) -> str:
+        """Abstract method to get descriptions of available tools."""
+        pass
+
+    @abstractmethod
+    async def tool_execution(self, tool_name: str, arguments: dict) -> str:
+        """Abstract method to execute a tool."""
+        pass
+
+
+class ToolSession(AbstractToolClient):
     """Orchestrates the interaction between user, LLM, and tools."""
 
     def __init__(self, servers: list[Server]) -> None:
@@ -222,7 +239,7 @@ class ToolSession:
             except Exception as e:
                 logging.error(f"Failed to initialize server: {e}")
                 await self.cleanup_servers()
-                return
+                return "Error: Failed to initialize server."
 
         for server in self.servers:
             tools = await server.list_tools()
@@ -246,9 +263,7 @@ class ToolSession:
                     logging.error(error_msg)
                     return error_msg
 
-        return f"No server found with tool: {tool_call['tool']}"
-
-    
+        return f"No server found with tool: {tool_name}"
 
     async def get_tools_description(self) -> str:
         """ """
@@ -259,7 +274,7 @@ class ToolSession:
                 except Exception as e:
                     logging.error(f"Failed to initialize server: {e}")
                     await self.cleanup_servers()
-                    return
+                    return "Error: Failed to initialize server."
 
             all_tools = []
             for server in self.servers:
@@ -273,24 +288,53 @@ class ToolSession:
             logging.error(f"Error getting tools description: {e}")
             return ""
 
+class MCPClient(AbstractToolClient):
+    """Client for interacting with MCP tools."""
+
+    def __init__(self, config_file: str = "servers_config.json") -> None:
+        self.config_file = config_file
+        self.toolsession: ToolSession | None = None
+
+    async def _initialize_toolsession(self) -> None:
+        if self.toolsession is None:
+            config = Configuration()
+            server_config = config.load_config(self.config_file)
+            servers = [
+                Server(name, srv_config)
+                for name, srv_config in server_config["mcpServers"].items()
+            ]
+            self.toolsession = ToolSession(servers)
+
+    async def get_tools_description(self) -> str:
+        await self._initialize_toolsession()
+        if self.toolsession:
+            return await self.toolsession.get_tools_description()
+        return "Error: ToolSession not initialized."
+
+    async def tool_execution(self, tool_name: str, arguments: dict) -> str:
+        await self._initialize_toolsession()
+        if self.toolsession:
+            return await self.toolsession.tool_execution(tool_name, arguments)
+        return "Error: ToolSession not initialized."
+
+    async def cleanup(self) -> None:
+        if self.toolsession:
+            await self.toolsession.cleanup_servers()
+
+
 async def main() -> None:
     """Initialize and run the chat session."""
-    config = Configuration()
-    server_config = config.load_config("servers_config.json")
-    servers = [
-        Server(name, srv_config)
-        for name, srv_config in server_config["mcpServers"].items()
-    ]
-    toolsession = ToolSession(servers)
-    
+    client = MCPClient()
     try:
-        # get_tools_description = await toolsession.get_tools_description()
-        # print(f"get_tools_description:\n{get_tools_description}")
-        result = await toolsession.tool_execution("kubectl_get", {"resourceType": "deployment", "output": "yaml"})
+        get_tools_description = await client.get_tools_description()
+        print(f"get_tools_description:\n{get_tools_description}")
+        # result = await client.tool_execution("kubectl_get", {"resourceType": "pod", "output": "yaml"})
+        result = await client.tool_execution("kubectl_describe", {'resourceType': 'pod', 'name': 'nginx-deployment-85c88b48cd-6kmxz', 'namespace': 'default'})
         print(f"result:\n{result}")
         time.sleep(1)
     finally:
-        await toolsession.cleanup_servers()
+        await client.cleanup()
+
 
 if __name__ == "__main__":
     asyncio.run(main())
