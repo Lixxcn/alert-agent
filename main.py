@@ -51,7 +51,7 @@ async def process_alert_from_queue():
             )
             if "report" in shared:
                 print("\n--- Generated Report (from main) ---\n")
-                print(shared["report"])
+                # print(shared["report"])
                 print("\n------------------------------------\n")
             else:
                 print("Main: No report generated for this alert.")

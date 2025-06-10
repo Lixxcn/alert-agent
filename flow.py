@@ -21,7 +21,7 @@ class LoggingAsyncFlow(AsyncFlow):
             
             curr = self.get_next_node(curr, last_action)
             if curr:
-                print(f"⏭️ 下一步骤: 即将执行节点 {curr.__class__.__name__}")
+                print(f"\n\n⏭️ 下一步骤: 即将执行节点 {curr.__class__.__name__}")
             else:
                 print("🏁 流程结束: 告警处理流程已全部完成！")
         

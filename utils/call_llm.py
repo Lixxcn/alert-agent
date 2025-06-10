@@ -21,7 +21,7 @@ def call_llm(messages, model="deepseek-chat"):
 if __name__ == "__main__":
     # 示例用法
     print("--- Test: Simple prompt ---")
-    messages = [{"role": "user", "content": "什么是LLM?"}]
+    messages = [{"role": "user", "content": "什么是LLM 用一句话概括。"}]
     print(call_llm(messages))
 
     print("\n--- Test: Structured output prompt ---")

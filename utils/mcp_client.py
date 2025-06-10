@@ -326,10 +326,11 @@ async def main() -> None:
     """Initialize and run the chat session."""
     client = MCPClient()
     try:
-        get_tools_description = await client.get_tools_description()
-        print(f"get_tools_description:\n{get_tools_description}")
-        # result = await client.tool_execution("kubectl_get", {"resourceType": "pod", "output": "yaml"})
-        result = await client.tool_execution("kubectl_describe", {'resourceType': 'pod', 'name': 'nginx-deployment-85c88b48cd-6kmxz', 'namespace': 'default'})
+        # get_tools_description = await client.get_tools_description()
+        # print(f"get_tools_description:\n{get_tools_description}")
+        result1 = await client.tool_execution("kubectl_get", {"resourceType": "pod", "output": "yaml"})
+        print(f"result:\n{result1}")
+        result = await client.tool_execution("kubectl_describe", {'resourceType': 'pod', 'name': 'nginx-deployment-85c88b48cd-k8lm7', 'namespace': 'default'})
         print(f"result:\n{result}")
         time.sleep(1)
     finally:
